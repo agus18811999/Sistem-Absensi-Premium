@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Absensi Premium</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Outfit"', 'sans-serif'] },
+                    colors: { primary: "#6366f1", accent: "#ec4899" }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* ANIMASI GRADASI BACKGROUND PREMIUM (Bukan Putih/Hitam) */
+        body {
+            background: linear-gradient(-45deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            font-family: 'Outfit', sans-serif;
+            color: #1e293b; /* Warna teks gelap kebiruan agar terbaca di bg cerah */
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* EFEK GLASSMORPHISM MEWAH */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 10px 40px rgba(31, 38, 135, 0.1);
+            border-radius: 24px;
+        }
+
+        /* CUSTOM INPUT STYLE */
+        .glass-input {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            color: #334155;
+            transition: all 0.3s;
+        }
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+            outline: none;
+        }
+
+        /* SPINNER LOADING */
+        .loader {
+            border: 3px solid rgba(99, 102, 241, 0.2);
+            border-left-color: #6366f1;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* CUSTOM SCROLLBAR */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.5); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.8); }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <header class="max-w-6xl mx-auto mb-8 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-6 glass-panel p-6">
+        <div class="flex items-center gap-4">
+            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Logo" class="w-14 h-14 object-contain filter drop-shadow-md">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Sync<span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">Work</span></h1>
+                <p class="text-slate-600 font-medium">Sistem Absensi & Tasking Premium</p>
+            </div>
+        </div>
+        
+        <div class="flex gap-2 bg-white/30 p-1.5 rounded-2xl border border-white/50 shadow-sm">
+            <button onclick="switchTab('form')" id="btnTabForm" class="px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 bg-white text-primary shadow-md">
+                <i class="fa-solid fa-pen-nib mr-2"></i> Form Absensi
+            </button>
+            <button onclick="switchTab('history')" id="btnTabHistory" class="px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 text-slate-600 hover:bg-white/50">
+                <i class="fa-solid fa-clock-rotate-left mr-2"></i> Riwayat Absensi
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto">
+        <section id="sectionForm" class="block animate-fade-in">
+            <div class="glass-panel p-8">
+                <div class="flex items-center gap-4 mb-8 border-b border-white/40 pb-4">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white shadow-lg">
+                        <i class="fa-solid fa-file-signature"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-slate-800">Isi Kehadiran & Laporan Tugas</h2>
+                </div>
+
+                <form id="formAbsensi" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="space-y-1">
+                            <label class="text-sm font-semibold text-slate-700">Nama Lengkap</label>
+                            <input type="text" name="nama" required class="w-full glass-input rounded-xl px-4 py-3" placeholder="Contoh: John Doe">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-semibold text-slate-700">Posisi</label>
+                            <input type="text" name="posisi" required class="w-full glass-input rounded-xl px-4 py-3" placeholder="Contoh: UI/UX Designer">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-semibold text-slate-700">Nama Divisi</label>
+                            <input type="text" name="divisi" required class="w-full glass-input rounded-xl px-4 py-3" placeholder="Contoh: Product Team">
+                        </div>
+
+                      <div class="space-y-1">
+    <label class="text-sm font-semibold text-slate-700">Waktu Absen</label>
+    <input type="datetime-local" step="1" name="waktu" id="inputWaktu" required class="w-full glass-input rounded-xl px-4 py-3 font-mono text-primary cursor-pointer">
+</div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-semibold text-slate-700">Lokasi</label>
+                            <select name="lokasi" class="w-full glass-input rounded-xl px-4 py-3 appearance-none">
+                                <option value="Online">🌐 Remote / Online</option>
+                                <option value="Offline">🏢 Office / Offline</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-semibold text-slate-700">Status Tugas</label>
+                            <select name="status" class="w-full glass-input rounded-xl px-4 py-3 appearance-none">
+                                <option value="Belum Selesai">⏳ Belum Selesai</option>
+                                <option value="Selesai">✅ Selesai</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-white/30">
+                        <div class="space-y-1">
+                            <label class="text-sm font-semibold text-slate-700">Nama Tasking</label>
+                            <input type="text" name="namaTasking" required class="w-full glass-input rounded-xl px-4 py-3" placeholder="Judul tugas yang dikerjakan">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-semibold text-slate-700">Bukti Upload (Link Drive/Image)</label>
+                            <input type="url" name="bukti" required class="w-full glass-input rounded-xl px-4 py-3" placeholder="https://drive.google.com/...">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-1">
+                            <label class="text-sm font-semibold text-slate-700">Deskripsi Tasking</label>
+                            <textarea name="deskripsiTasking" rows="3" required class="w-full glass-input rounded-xl px-4 py-3" placeholder="Jelaskan detail tugasmu..."></textarea>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-semibold text-slate-700">Deskripsi Kegiatan</label>
+                            <textarea name="deskripsiKegiatan" rows="3" required class="w-full glass-input rounded-xl px-4 py-3" placeholder="Hambatan atau log aktivitas hari ini..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="pt-6 flex justify-end border-t border-white/30">
+                        <button type="submit" id="btnSubmit" class="bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:shadow-primary/40 text-white font-bold py-3 px-10 rounded-xl transition-all transform hover:-translate-y-1 flex items-center gap-3">
+                            <span id="submitText">Kirim Laporan Kehadiran</span>
+                            <div id="submitLoader" class="hidden loader"></div>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section id="sectionHistory" class="hidden animate-fade-in">
+            <div class="glass-panel p-8 min-h-[60vh]">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8 border-b border-white/40 pb-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center text-white shadow-lg">
+                            <i class="fa-solid fa-database"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-slate-800">Database & Riwayat</h2>
+                    </div>
+                    
+                    <div class="relative w-full md:w-72">
+                        <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="searchHistory" placeholder="Cari nama atau tasking..." class="w-full glass-input rounded-xl pl-12 pr-4 py-2.5 text-sm">
+                    </div>
+                </div>
+
+                <div id="historyLoading" class="flex flex-col items-center justify-center py-20">
+                    <div class="loader mb-4" style="width: 40px; height: 40px; border-width: 4px;"></div>
+                    <p class="text-slate-600 font-medium animate-pulse">Menyinkronkan data dari server...</p>
+                </div>
+
+                <div id="historyContainer" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // ==========================================
+        // KONFIGURASI API (WAJIB GANTI URL INI)
+        // ==========================================
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzmxSGE-QqA1D7gmY5EbMlU7CYK5bunTlRhrd3NbZjunczvxex32XN4wCsUBw81wiE/exec'; 
+
+        // ==========================================
+        // 1. LOGIKA WAKTU OTOMATIS
+        // ==========================================
+    // ==========================================
+        // 1. LOGIKA WAKTU DEFAULT (BISA DIEDIT USER)
+        // ==========================================
+        function setWaktuDefault() {
+            const now = new Date();
+            
+            // Mengubah format waktu menyesuaikan standar input datetime-local (YYYY-MM-DDThh:mm:ss)
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            const formattedTime = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+            document.getElementById('inputWaktu').value = formattedTime;
+        }
+        
+        // Panggil fungsi ini sekali saat halaman pertama kali dibuka
+        setWaktuDefault();
+        // ==========================================
+        // 2. LOGIKA PINDAH TAB NAVIGASI
+        // ==========================================
+        function switchTab(tabName) {
+            const secForm = document.getElementById('sectionForm');
+            const secHist = document.getElementById('sectionHistory');
+            const btnForm = document.getElementById('btnTabForm');
+            const btnHist = document.getElementById('btnTabHistory');
+
+            if (tabName === 'form') {
+                secForm.style.display = 'block';
+                secHist.style.display = 'none';
+                
+                // Style Aktif untuk Tab Form
+                btnForm.className = "px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 bg-white text-primary shadow-md";
+                btnHist.className = "px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 text-slate-600 hover:bg-white/50";
+            } else {
+                secForm.style.display = 'none';
+                secHist.style.display = 'block';
+                
+                // Style Aktif untuk Tab History
+                btnHist.className = "px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 bg-white text-primary shadow-md";
+                btnForm.className = "px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 text-slate-600 hover:bg-white/50";
+                
+                // Fetch data dari server setiap kali buka tab history
+                fetchHistory();
+            }
+        }
+
+        // ==========================================
+        // 3. LOGIKA KIRIM FORM (POST KE API)
+        // ==========================================
+        const form = document.getElementById('formAbsensi');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Ubah tampilan tombol jadi loading
+            const btnSubmit = document.getElementById('btnSubmit');
+            const submitText = document.getElementById('submitText');
+            const submitLoader = document.getElementById('submitLoader');
+
+            btnSubmit.disabled = true;
+            submitText.innerText = "Memproses...";
+            submitLoader.style.display = "inline-block";
+
+            // Mengambil semua data dari form
+            const formData = new FormData(form);
+
+            try {
+                // Mengirim ke Google Apps Script menggunakan POST
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: new URLSearchParams(formData)
+                });
+
+                // Memunculkan Pop-Up Sukses (SweetAlert2) yang Sangat Premium
+                Swal.fire({
+                    title: 'Laporan Diterima!',
+                    text: 'Data absensi dan taskingmu telah tersimpan dengan aman di database.',
+                    icon: 'success',
+                    background: 'rgba(255, 255, 255, 0.9)',
+                    backdrop: 'rgba(0,0,0,0.4)',
+                    confirmButtonColor: '#6366f1',
+                    customClass: {
+                        popup: 'rounded-3xl border border-white/60 shadow-2xl backdrop-blur-xl'
+                    }
+                });
+
+                form.reset(); // Kosongkan form
+              setWaktuDefault(); // Kembalikan waktu ke saat ini setelah form dikirim
+
+                // Pindah otomatis ke tab history untuk melihat hasil inputnya
+                setTimeout(() => { switchTab('history'); }, 1500);
+
+            } catch (error) {
+                Swal.fire('Terjadi Kesalahan', 'Pastikan koneksi internet stabil dan URL Script sudah benar.', 'error');
+            } finally {
+                // Kembalikan tombol seperti semula
+                btnSubmit.disabled = false;
+                submitText.innerText = "Kirim Laporan Kehadiran";
+                submitLoader.style.display = "none";
+            }
+        });
+
+        // ==========================================
+        // 4. LOGIKA AMBIL DATA HISTORY (GET DARI API)
+        // ==========================================
+        let globalHistoryData = []; // Menyimpan data untuk fitur pencarian
+
+        async function fetchHistory() {
+            const loadingUI = document.getElementById('historyLoading');
+            const containerUI = document.getElementById('historyContainer');
+            
+            loadingUI.style.display = 'flex';
+            containerUI.style.display = 'none';
+
+            try {
+                const response = await fetch(SCRIPT_URL);
+                const json = await response.json();
+                
+                if (json.status === "success") {
+                    globalHistoryData = json.data;
+                    renderHistoryCards(globalHistoryData);
+                } else {
+                    console.error("Gagal mengambil data");
+                }
+            } catch (error) {
+                containerUI.innerHTML = `<p class="text-red-500 text-center col-span-2">Gagal memuat database. Periksa URL Script API.</p>`;
+            } finally {
+                loadingUI.style.display = 'none';
+                containerUI.style.display = 'grid';
+            }
+        }
+
+        // ==========================================
+        // 5. RENDER TAMPILAN KARTU HISTORY
+        // ==========================================
+        function renderHistoryCards(dataArray) {
+            const container = document.getElementById('historyContainer');
+            container.innerHTML = ''; // Kosongkan sebelum diisi
+
+            if(dataArray.length === 0) {
+                container.innerHTML = `<div class="col-span-2 text-center text-slate-500 py-10">Belum ada data absensi.</div>`;
+                return;
+            }
+
+            dataArray.forEach(data => {
+                // Jangan tampilkan jika baris kosong
+                if(!data["Nama Lengkap"]) return; 
+
+                // Tentukan warna badge status
+                const statusColor = data["Status"] === "Selesai" ? "bg-emerald-100 text-emerald-600 border-emerald-200" : "bg-amber-100 text-amber-600 border-amber-200";
+                
+                const card = document.createElement('div');
+                card.className = "bg-white/60 backdrop-blur-sm border border-white/80 p-5 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300";
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-3 border-b border-slate-200 pb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-slate-700 to-slate-900 text-white flex items-center justify-center font-bold text-lg">
+                                ${data["Nama Lengkap"].charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-slate-800 text-lg leading-tight">${data["Nama Lengkap"]}</h3>
+                                <p class="text-xs font-semibold text-primary uppercase tracking-wider">${data["Posisi"]} • ${data["Nama Divisi"]}</p>
+                            </div>
+                        </div>
+                        <span class="text-xs px-2.5 py-1 rounded-lg border font-bold ${statusColor}">
+                            ${data["Status"]}
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 text-sm mb-4">
+                        <div class="bg-white/50 p-2.5 rounded-xl border border-white/60">
+                            <p class="text-xs text-slate-500 mb-0.5">Waktu & Lokasi</p>
+                            <p class="font-semibold text-slate-700"><i class="fa-regular fa-clock text-primary"></i> ${data["Waktu Absen"]}</p>
+                            <p class="font-medium text-slate-600 text-xs mt-1"><i class="fa-solid fa-map-pin text-accent"></i> ${data["Lokasi"]}</p>
+                        </div>
+                        <div class="bg-white/50 p-2.5 rounded-xl border border-white/60">
+                            <p class="text-xs text-slate-500 mb-0.5">Tasking</p>
+                            <p class="font-semibold text-slate-700 line-clamp-1">${data["Nama Tasking"]}</p>
+                            <p class="text-xs text-slate-600 line-clamp-1 mt-1">${data["Deskripsi Tasking"]}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center mt-2 pt-2 border-t border-slate-200 border-dashed">
+                        <p class="text-xs text-slate-500 flex-1 line-clamp-1 pr-4">Catatan: ${data["Deskripsi Kegiatan"]}</p>
+                        <a href="${data["Bukti Upload Kegiatan"] || data["Bukti Upload"] || '#'}" target="_blank" class="flex-none bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-colors">
+                            <i class="fa-solid fa-link"></i> Bukti URL
+                        </a>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // ==========================================
+        // 6. FITUR PENCARIAN LIVE DI HISTORY
+        // ==========================================
+        document.getElementById('searchHistory').addEventListener('input', function(e) {
+            const keyword = e.target.value.toLowerCase();
+            const filteredData = globalHistoryData.filter(item => {
+                const nama = (item["Nama Lengkap"] || "").toLowerCase();
+                const tasking = (item["Nama Tasking"] || "").toLowerCase();
+                return nama.includes(keyword) || tasking.includes(keyword);
+            });
+            renderHistoryCards(filteredData);
+        });
+    </script>
+</body>
+</html>
