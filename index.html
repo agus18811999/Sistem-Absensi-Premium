@@ -38,7 +38,8 @@
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
-
+        /* Memperbaiki posisi ikon pop-up SweetAlert2 yang terpengaruh Tailwind */
+        
         /* EFEK GLASSMORPHISM MEWAH */
         .glass-panel {
             background: rgba(255, 255, 255, 0.45);
@@ -61,6 +62,21 @@
             border-color: #6366f1;
             box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
             outline: none;
+        }
+        /* ==========================================
+           FIX MUTLAK ICON SWEETALERT2 x TAILWIND
+           ========================================== */
+        
+        /* 1. Kembalikan ukuran asli ikon yang dirusak Tailwind */
+        .swal2-icon, .swal2-icon * {
+            box-sizing: content-box !important;
+        }
+        
+        /* 2. Hapus kotak penutup animasi bawaan yang menabrak background transparan */
+        .swal2-success-circular-line-left,
+        .swal2-success-circular-line-right,
+        .swal2-success-fix {
+            background-color: transparent !important;
         }
 
         /* SPINNER LOADING */
@@ -154,7 +170,7 @@
                             <input type="text" name="namaTasking" required class="w-full glass-input rounded-xl px-4 py-3" placeholder="Judul tugas yang dikerjakan">
                         </div>
                         <div class="space-y-1">
-                            <label class="text-sm font-semibold text-slate-700">Bukti Upload (Link Drive/Image)</label>
+                            <label class="text-sm font-semibold text-slate-700">Bukti Link Pengerjaan</label>
                             <input type="url" name="bukti" required class="w-full glass-input rounded-xl px-4 py-3" placeholder="https://drive.google.com/...">
                         </div>
                     </div>
@@ -165,8 +181,8 @@
                             <textarea name="deskripsiTasking" rows="3" required class="w-full glass-input rounded-xl px-4 py-3" placeholder="Jelaskan detail tugasmu..."></textarea>
                         </div>
                         <div class="space-y-1">
-                            <label class="text-sm font-semibold text-slate-700">Deskripsi Kegiatan</label>
-                            <textarea name="deskripsiKegiatan" rows="3" required class="w-full glass-input rounded-xl px-4 py-3" placeholder="Hambatan atau log aktivitas hari ini..."></textarea>
+                            <label class="text-sm font-semibold text-slate-700">Catatan</label>
+                            <textarea name="catatan" rows="3" required class="w-full glass-input rounded-xl px-4 py-3" placeholder="Hambatan atau log aktivitas hari ini..."></textarea>
                         </div>
                     </div>
 
@@ -211,7 +227,7 @@
         // ==========================================
         // KONFIGURASI API (WAJIB GANTI URL INI)
         // ==========================================
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzmxSGE-QqA1D7gmY5EbMlU7CYK5bunTlRhrd3NbZjunczvxex32XN4wCsUBw81wiE/exec'; 
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwqbyoRR1l9VKs8NnlkaKXpiW1DSbqFPwGNCYEbjZSjR5nOFqrvhQX3qc7q9ko9I5c/exec'; 
 
         // ==========================================
         // 1. LOGIKA WAKTU OTOMATIS
