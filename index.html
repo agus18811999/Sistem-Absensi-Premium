@@ -284,73 +284,72 @@
         // ==========================================
         // 3. LOGIKA KIRIM FORM (POST KE API)
         // ==========================================
+    // ==========================================
+        // 3. LOGIKA KIRIM FORM (POST KE API) - FULL FIX
+        // ==========================================
         const form = document.getElementById('formAbsensi');
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            // Ubah tampilan tombol jadi loading
+            // 1. Ubah tampilan tombol jadi loading
             const btnSubmit = document.getElementById('btnSubmit');
             const submitText = document.getElementById('submitText');
             const submitLoader = document.getElementById('submitLoader');
 
             btnSubmit.disabled = true;
             submitText.innerText = "Memproses...";
-            submitLoader.style.display = "inline-block";
+            if(submitLoader) submitLoader.style.display = "inline-block";
 
-            // Mengambil semua data dari form
-           // Mengambil semua data dari form
+            // 2. Mengambil semua data dari form
             const formData = new FormData(form);
 
-            // ==========================================
-            // REVISI PRIVASI: Simpan BANYAK nama ke memori browser
-            // ==========================================
-            const namaUser = formData.get('nama').trim().toLowerCase(); // Ambil nama form
-            
-            // Buka 'Buku Catatan' di memori HP, jika kosong buat buku baru (Array)
-            let daftarNama = JSON.parse(localStorage.getItem('daftarNamaSaya')) || [];
-            
-            // Jika nama ini belum ada di buku catatan HP, maka tulis/tambahkan!
-            if (!daftarNama.includes(namaUser)) {
-                daftarNama.push(namaUser);
-                localStorage.setItem('daftarNamaSaya', JSON.stringify(daftarNama));
-            }
-
             try {
-                // Mengirim ke Google Apps Script menggunakan POST
+                // 3. LOGIKA PRIVASI (Simpan daftar nama ke memori HP)
+                const namaUserRaw = formData.get('nama');
+                if (namaUserRaw) {
+                    const namaUser = namaUserRaw.trim().toLowerCase(); 
+                    let daftarNama = JSON.parse(localStorage.getItem('daftarNamaSaya')) || [];
+                    if (!daftarNama.includes(namaUser)) {
+                        daftarNama.push(namaUser);
+                        localStorage.setItem('daftarNamaSaya', JSON.stringify(daftarNama));
+                    }
+                }
+
+                // 4. MENGIRIM DATA KE GOOGLE SCRIPT
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
                     body: new URLSearchParams(formData)
                 });
 
-                // Memunculkan Pop-Up Sukses (SweetAlert2) yang Sangat Premium
+                // 5. MUNCULKAN POP-UP SUKSES
                 Swal.fire({
                     title: 'Laporan Diterima!',
-                    text: 'Data absensi dan taskingmu telah tersimpan dengan aman di database.',
+                    text: 'Data absensi dan taskingmu telah tersimpan.',
                     icon: 'success',
                     background: 'rgba(255, 255, 255, 0.9)',
                     backdrop: 'rgba(0,0,0,0.4)',
                     confirmButtonColor: '#6366f1',
-                    customClass: {
-                        popup: 'rounded-3xl border border-white/60 shadow-2xl backdrop-blur-xl'
-                    }
+                    customClass: { popup: 'rounded-3xl border border-white/60 shadow-2xl backdrop-blur-xl' }
                 });
 
                 form.reset(); // Kosongkan form
-              setWaktuDefault(); // Kembalikan waktu ke saat ini setelah form dikirim
+                
+                // Cek apakah fungsi setWaktuDefault ada, jika ada panggil untuk mereset jam
+                if (typeof setWaktuDefault === "function") setWaktuDefault(); 
 
                 // Pindah otomatis ke tab history untuk melihat hasil inputnya
                 setTimeout(() => { switchTab('history'); }, 1500);
 
             } catch (error) {
+                console.error("Error Fetch:", error);
                 Swal.fire('Terjadi Kesalahan', 'Pastikan koneksi internet stabil dan URL Script sudah benar.', 'error');
             } finally {
-                // Kembalikan tombol seperti semula
+                // 6. KEMBALIKAN TOMBOL KE SEMULA MESKIPUN SUKSES/GAGAL
                 btnSubmit.disabled = false;
                 submitText.innerText = "Kirim Laporan Kehadiran";
-                submitLoader.style.display = "none";
+                if(submitLoader) submitLoader.style.display = "none";
             }
         });
-
         // ==========================================
         // 4. LOGIKA AMBIL DATA HISTORY (GET DARI API)
         // ==========================================
